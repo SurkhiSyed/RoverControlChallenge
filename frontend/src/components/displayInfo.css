@@ -1,0 +1,50 @@
+/* Card Styling */
+:root{
+    --color1: #12c2e9;
+    --color2: #c471ed;
+    --color3: #f64f59;
+  }
+  
+  .circle-background {
+    fill: none;
+    stroke: #ddd;
+  }
+  
+  .circle-progress {
+    fill: none;
+    stroke: var(--color3);
+    stroke-linecap: round;
+    stroke-width: 15px; /* Match the strokeWidth in the React component */
+    stroke-dasharray: 0 100;
+    transition: stroke-dasharray 0.5s;
+  }
+  
+  .circle-text {
+    font-size: 1rem;
+    font-weight: bold;
+  }
+
+.card {
+    background-color: gray;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 1rem;
+    margin: 0 auto;
+    width: 100%;
+    max-width: 600px;
+    transition: transform 0.3s ease;
+  }
+  
+  .card:hover {
+    transform: translateY(-5px);
+  }
+  
+  .card-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+  }
+  
+  .card-summary {
+    font-size: 1rem;
+    color: black;
+  }

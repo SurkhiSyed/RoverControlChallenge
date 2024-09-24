@@ -59,12 +59,14 @@ async def send_wheel_data(websocket):
                 prev_left_wheels_speed = left_wheels_speed
                 prev_right_wheels_speed = right_wheels_speed
                                 
-            
-            
             await asyncio.sleep(0.1)  # Limit the rate of data transmission
 
         except pygame.error:
             print("Joystick error")
+            await websocket.send(json.dumps({
+                "left_wheels": [20],
+                "right_wheels": [20]
+            }))
             break
 
 # Start WebSocket server
