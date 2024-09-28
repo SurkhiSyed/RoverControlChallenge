@@ -1,50 +1,120 @@
 /* Card Styling */
 :root{
-    --color1: #12c2e9;
-    --color2: #c471ed;
-    --color3: #f64f59;
-  }
-  
-  .circle-background {
-    fill: none;
-    stroke: #ddd;
-  }
-  
-  .circle-progress {
-    fill: none;
-    stroke: var(--color3);
-    stroke-linecap: round;
-    stroke-width: 15px; /* Match the strokeWidth in the React component */
-    stroke-dasharray: 0 100;
-    transition: stroke-dasharray 0.5s;
-  }
-  
-  .circle-text {
-    font-size: 1rem;
-    font-weight: bold;
-  }
+  --color1: #12c2e9;
+  --color2: #c471ed;
+  --color3: #f64f59;
+}
+
+.circle-background {
+  fill: none;
+  stroke: #ddd;
+}
+
+.circle-progress {
+  fill: none;
+  stroke: var(--color3);
+  stroke-linecap: round;
+  stroke-width: 15px; /* Match the strokeWidth in the React component */
+  stroke-dasharray: 0 100;
+  transition: stroke-dasharray 0.5s;
+}
+
+.circle-text {
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+.card-container {
+  display: flex;
+  flex-direction: row; /* Arrange cards horizontally */
+  gap: 1rem; /* Space between cards */
+  justify-content: center; /* Center the cards horizontally */
+  flex-wrap: wrap; /* Wrap cards to the next line if they overflow */
+}
 
 .card {
-    background-color: gray;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    padding: 1rem;
-    margin: 0 auto;
-    width: 100%;
-    max-width: 600px;
-    transition: transform 0.3s ease;
-  }
-  
-  .card:hover {
-    transform: translateY(-5px);
-  }
-  
-  .card-title {
-    font-size: 1.5rem;
-    font-weight: bold;
-  }
-  
-  .card-summary {
-    font-size: 1rem;
-    color: black;
-  }
+  background-color: gray;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 1rem;
+  margin: 0 auto;
+  width: 100%;
+  max-width: 600px;
+  transition: transform 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+}
+
+.card-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.card-summary {
+  font-size: 1rem;
+  color: black;
+}
+
+.speedDisplay {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+
+.terminal-holder {
+  background-color: #333;
+  color: white;
+  padding: 1rem;
+  box-sizing: border-box;
+  white-space: pre-line;
+  overflow-y: auto;
+  overflow: scroll;
+  height: 300px;  
+}
+
+.terminal-output {
+  text-align: left; /* Ensure text is aligned to the left */
+}
+
+input {
+  border: none;
+  outline: none;
+  margin: 0;
+  padding: 0;
+  background-color: transparent;
+  color: white;
+  width: 100%;
+}
+
+.terminal-holder {
+  white-space: pre-line;
+  overflow-y: auto;
+  overflow: scroll;
+  height: 300px;  
+  margin-bottom: 1rem; /* Add spacing between terminal sections */
+}
+
+.terminal-holder::-webkit-scrollbar {
+  width: 8px;
+}
+
+.terminal-holder::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.terminal-holder::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.4);
+  border-radius: 10px;
+  border: 2px solid transparent;
+}
+
+.terminal-holder::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.6);
+}
+
+.terminal-holder::-webkit-scrollbar-thumb:active {
+  background-color: rgba(255, 255, 255, 0.8);
+}
