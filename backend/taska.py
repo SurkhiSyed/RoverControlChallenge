@@ -1,3 +1,5 @@
+#File responsible for sending packets to the frontend
+
 import pygame
 import asyncio
 import websockets
@@ -24,52 +26,36 @@ async def wheelMovement(left_wheels_speed, right_wheels_speed):
     
     print(f"Left Wheels: {left_wheels_speed}, Right Wheels: {right_wheels_speed}")
     print(f"D_{rightWheelSpeed1}_{rightWheelSpeed2}_{rightWheelSpeed3}_{leftWheelSpeed1}_{leftWheelSpeed2}_{leftWheelSpeed3}")
-
-    '''data = {
-        "left_wheels": [leftWheelSpeed1],
-        "right_wheels": [rightWheelSpeed1],
-        "wheel_Data": [f"D_{rightWheelSpeed1}_{rightWheelSpeed2}_{rightWheelSpeed3}_{leftWheelSpeed1}_{leftWheelSpeed2}_{leftWheelSpeed3}"]
-    }'''
     
     data = f"D_{rightWheelSpeed1}_{rightWheelSpeed2}_{rightWheelSpeed3}_{leftWheelSpeed1}_{leftWheelSpeed2}_{leftWheelSpeed3}"
     
     return data
 
 # Arm Movement Function
-async def armMovement(gantry, elbow, clawRotation, clawInOrOut, claw, shoulderRotation):
+async def armMovement(gantry, elbow, clawRotation, clawInOrOut, claw, shoulderRotation, armSpeed):
     if(clawRotation != 0):
         # To make the claw go up or down
-        wristleft = clawInOrOut * 128 + 128
-        wristright = - (clawInOrOut * 128) + 128
+        wristleft = round(clawInOrOut * armSpeed + 128)
+        wristright = - round((clawInOrOut * armSpeed) + 128)
     else: #If claw is moving in or out
         # To make the claw rotate left or right
-        wristright = clawRotation * 128 + 128
-        wristleft = clawRotation * 128 + 128
+        wristright = round(clawRotation * armSpeed + 128)
+        wristleft = round(clawRotation * armSpeed + 128)
     
     #For Shoulder Rotation clockwise or counterclockwise
-    shoulderRotation = shoulderRotation * 128 + 128
+    shoulderRotation = round(shoulderRotation * armSpeed + 128)
     #For elbow up or down
-    elbow = elbow * 128 + 128
+    elbow = round(elbow * armSpeed + 128)
     
     print(f"Gantry: {gantry}, Elbow: {elbow}, Left Stick: ({clawInOrOut}, {clawRotation}))")
     print(f"A_{elbow}_{wristright}_{wristleft}_{claw}_{gantry}_{shoulderRotation})")
 
     data = (f"A_{elbow}_{wristright}_{wristleft}_{claw}_{gantry}_{shoulderRotation})")
-    '''data = {
-        "gantry": gantry,
-        "elbow": elbow,
-        "clawRotation": clawRotation, 
-        "clawInOrOut": clawInOrOut,
-        "claw": claw,
-        "shoulder": shoulderRotation,
-        "left_wheels": [128],
-        "right_wheels": [128]
-    }'''
     return data
 
 DEAD_ZONE = 0.05
 
-async def send_wheel_data(websocket):
+async def send_wheel_data(websocket, path):
     prev_left_wheels_speed = 0
     prev_right_wheels_speed = 0
     gantry = 128
@@ -85,9 +71,36 @@ async def send_wheel_data(websocket):
     wheelSpeed_data = "D_128_128_128_128_128_128"  # Default wheel data
     arm_data = "A_128_128_128_128_128_128"  # Default arm data
     running = True
-    armMovementSpeed = 5
+    armMovementSpeed = 128
+    shoulderRotation = 1
+    elbowMovement = 1
+    clawRotation = 1
+
+    # Send initial data to the server
+    data = {
+        "wheel_Data": [f"0"],
+        "left_wheels": [128 * 2],
+        "right_wheels": [128 * 2],
+        "arm_data": [arm_data],
+        "shoulderRotation": [shoulderRotation * 128 + 128],
+        "elbowMovement": [elbowMovement * 128 + 128],
+        "wristRotation": [clawRotation * 128 + 128]
+    }
+    await websocket.send(json.dumps(data))
+
+    #tried to implement changing speed from the frontend, currently a prototype
+    async def receive_percentage_data():
+        nonlocal armMovementSpeed
+        async for message in websocket:
+            dataRecieved = json.loads(message)
+            if 'percentage1' in dataRecieved and 'percentage2' in dataRecieved:
+                armMovementSpeed = (dataRecieved['percentage1'] + dataRecieved['percentage2']) / 2
+                print(f"Updated armMovementSpeed: {armMovementSpeed}")
+
+    asyncio.create_task(receive_percentage_data()) #tried to call out the fucntion to receive data from frontend
 
     while running:
+        data_changed = False  # Flag to track data changes
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -115,18 +128,16 @@ async def send_wheel_data(websocket):
                     # Only send wheel data if the joystick input has changed
                     if left_wheels_speed != prev_left_wheels_speed or right_wheels_speed != prev_right_wheels_speed:
                         wheelSpeed_data = await wheelMovement(left_wheels_speed, right_wheels_speed)
-                        #await websocket.send(json.dumps(wheelSpeed_data))
-
                         prev_left_wheels_speed = left_wheels_speed
                         prev_right_wheels_speed = right_wheels_speed
+                        data_changed = True  # Mark that data has changed
                 
-                ###############################################################################################################
                 else:
                     # Arm Mode
-                    clawRotation = joystick.get_axis(0)  #For rotating the claw clockwise or counterclockwise
-                    clawMovement = joystick.get_axis(1)   #For moving the claw up or down
-                    shoulderRotation = joystick.get_axis(2)  #For rotating the shoulder clockwise or counterclockwise with right joystick x
-                    elbowMovement = joystick.get_axis(3)  #For moving the elbow up or down with right joystick y
+                    clawRotation = joystick.get_axis(0)  # For rotating the claw clockwise or counterclockwise
+                    clawMovement = joystick.get_axis(1)  # For moving the claw up or down
+                    shoulderRotation = joystick.get_axis(2)  # For rotating the shoulder clockwise or counterclockwise with right joystick x
+                    elbowMovement = joystick.get_axis(3)  # For moving the elbow up or down with right joystick y
 
                     # Button inputs to toggle wrist to open or close
                     if joystick.get_button(1):  # Button 1 to toggle wrist between 0 and 255
@@ -143,35 +154,31 @@ async def send_wheel_data(websocket):
 
                     # Send arm movement data if there was change in values
                     if prev_claw != claw or prev_gantry != gantry or prev_leftJoystick_x != clawRotation or prev_leftJoystick_y != clawMovement or prev_elbowMovement != elbowMovement or prev_shoulderRotation != shoulderRotation:
-                        arm_data = await armMovement(gantry, elbowMovement, clawRotation, clawMovement, claw, shoulderRotation)
-                        #await websocket.send(json.dumps(arm_data))
-                        
-                        #Update the previous values with the current values
+                        arm_data = await armMovement(gantry, elbowMovement, clawRotation, clawMovement, claw, shoulderRotation, armMovementSpeed)
                         prev_claw = claw
                         prev_gantry = gantry
                         prev_leftJoystick_x = clawRotation
                         prev_leftJoystick_y = clawMovement
                         prev_elbowMovement = elbowMovement
                         prev_shoulderRotation = shoulderRotation
-                    
-                data = {
-                    #"wheel_Data": [f"0"],
-                    "left_wheels": [left_wheels_speed*2],
-                    "right_wheels": [right_wheels_speed*2],
-                    "wheel_Data": [wheelSpeed_data],
-                    "arm_data": [arm_data]
-                }
-                await websocket.send(json.dumps(data))
-
+                        data_changed = True  # Mark that data has changed
+                
+                #If values changed, then send data to frontend
+                if data_changed:
+                    data = {
+                        "left_wheels": [left_wheels_speed * 2],
+                        "right_wheels": [right_wheels_speed * 2],
+                        "wheel_Data": [wheelSpeed_data],
+                        "arm_data": [arm_data],
+                        "shoulderRotation": [shoulderRotation * 128 + 128],
+                        "elbowMovement": [elbowMovement * 128 + 128],
+                        "wristRotation": [clawRotation * 128 + 128]
+                    }
+                    await websocket.send(json.dumps(data))
 
             else:
-                data = {
-                "wheel_Data": [f"0"],
-                "left_wheels": [128*2],
-                "right_wheels": [128*2]
-                }
-                await websocket.send(json.dumps(data))
                 print("No joystick connected.")
+                print(armMovementSpeed)
                                 
             await asyncio.sleep(0.1)  # Limit the rate of data transmission to 10 times per second
 
@@ -185,8 +192,8 @@ async def send_wheel_data(websocket):
 
 # Start WebSocket server
 async def main():
-    print("WebSocket server started on ws://0.0.0.0:5000")
-    async with websockets.serve(send_wheel_data, "0.0.0.0", 5000):
+    print("WebSocket server started on ws://0.0.0.0:5000") #Conencting to frontend with websocket server
+    async with websockets.serve(send_wheel_data, "0.0.0.0", 5000): #With port and IP address
         await asyncio.Future()  # Run forever
 
 if __name__ == "__main__":

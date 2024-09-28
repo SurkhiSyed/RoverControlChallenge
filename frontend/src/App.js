@@ -1,10 +1,10 @@
 import logo from './logo.svg';
 import './App.css';
-import WheelDisplay from './components/displayInfo';
+import WheelDisplay from './components/displayInfo'; //Import WheelDisplay to display wheels
 import * as THREE from 'three';
-import { useEffect } from 'react';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-import Stats from 'three/examples/jsm/libs/stats.module';
+import { useEffect } from 'react'; //Import useEffect
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'; //Imort OrbitControls from three.js
+import Stats from 'three/examples/jsm/libs/stats.module'; //Import Stats
 
 function App() {
   useEffect(() => {
@@ -102,7 +102,6 @@ function App() {
       <canvas id="myThreeJsCanvas" />
       </div>
       <WheelDisplay />
-      <h1>Hello</h1>
     </div>
   );
 }

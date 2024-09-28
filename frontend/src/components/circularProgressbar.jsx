@@ -1,12 +1,17 @@
+//File for Making circular progress bars
+
 import React from 'react'
 import './displayInfo.css'
 
 const CircularProgressbar = ({percentage, circleWidth}) => {
+    //Define some math variables
     const strokeWidth = 15;
     const radius = (circleWidth - strokeWidth) / 2;
     const dashArray = radius * Math.PI * 2
     const dashOffset = dashArray - (dashArray * percentage) / 100
 
+
+    //Implement the shapes using math vairables
     return (
         <div>
             <svg 
@@ -35,7 +40,7 @@ const CircularProgressbar = ({percentage, circleWidth}) => {
                     transform={`rotate(-90 ${circleWidth / 2} ${circleWidth / 2})`}
                 />
                 <text x='50%' y='50%' dy='0.3em' textAnchor='middle' className='circle-text'>
-                    Throttle: {percentage}%
+                    Throttle: {percentage}% 
                 </text>
             </svg>
         </div>

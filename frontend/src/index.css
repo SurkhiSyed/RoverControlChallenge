@@ -1,3 +1,7 @@
+/*
+CSS main file for general looks
+*/
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

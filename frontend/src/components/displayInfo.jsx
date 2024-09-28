@@ -1,29 +1,51 @@
+//File to display terminals and speed of wheels
+
 import React, { useEffect, useState, useRef } from 'react';
 import 'react-circular-progressbar/dist/styles.css';
 import CircularProgressbar from './circularProgressbar';
 import './displayInfo.css';
 
 const WheelDisplay = () => {
-    const [wheelData, setWheelData] = useState({ left_wheels: [], right_wheels: [], wheel_Data: [] });
+    const [wheelData, setWheelData] = useState({
+        left_wheels: [],
+        right_wheels: [],
+        wheel_Data: [],
+        elbowMovement: [],
+        wristRotation: [],
+        shoulderRotation: []
+    });
     const [input, setInput] = useState("");
     const [output, setOutput] = useState("");
     const [outputControls, setOutputControls] = useState("");
+    const [isSocketOpen, setIsSocketOpen] = useState(false); // Track WebSocket connection status
 
     const inputRef = useRef();
+    const socketRef = useRef(null);
 
     // function for calculating the color
-    const [percentage1, setPercentage1] = useState(35);
+    const [percentage1, setPercentage1] = useState(100); //Set the percentages to 100% intirially
+    const [percentage2, setPercentage2] = useState(100);
 
+    //To call out the motor speeds of different ocmponentes called from the backend python file
     const speedLeft_percentage = Math.round((wheelData.left_wheels.length > 0 ? wheelData.left_wheels[0] : 0) * 100 / 255);
     const speedRight_percentage = Math.round((wheelData.right_wheels.length > 0 ? wheelData.right_wheels[0] : 0) * 100 / 255);
+    const elbowSpeed_percentage = Math.round((wheelData.elbowMovement.length > 0 ? wheelData.elbowMovement[0] : 0) * 100 / 255);
+    const wristRotation_percentage = Math.round((wheelData.wristRotation.length > 0 ? wheelData.wristRotation[0] : 0) * 100 / 255);
+    const shoulderRotation_percentage = Math.round((wheelData.shoulderRotation.length > 0 ? wheelData.shoulderRotation[0] : 0) * 100 / 255);
+
     console.log(percentage1);
 
     useEffect(() => {
         // Create a WebSocket connection
-        const socket = new WebSocket('ws://localhost:5000');
+        socketRef.current = new WebSocket('ws://localhost:5000');
+
+        // Listen for the open event
+        socketRef.current.onopen = () => {
+            setIsSocketOpen(true);
+        };
 
         // Listen for messages from the server
-        socket.onmessage = (event) => {
+        socketRef.current.onmessage = (event) => {
             const data = JSON.parse(event.data);
             setWheelData(data);
             console.log(data);
@@ -38,13 +60,29 @@ const WheelDisplay = () => {
 
         // Clean up the connection when the component unmounts
         return () => {
-            socket.close();
+            socketRef.current.close();
         };
     }, []);
 
     useEffect(() => {
         inputRef.current.focus();
     }, []);
+
+    //To send the percentage data to the backend python file
+    const sendPercentageData = () => {
+        if (isSocketOpen) {
+            const data = {
+                percentage1,
+                percentage2
+            };
+            socketRef.current.send(JSON.stringify(data));
+        }
+    };
+
+    //To change the percentage data
+    useEffect(() => {
+        sendPercentageData();
+    }, [percentage1, percentage2]);
 
     return (
         <div className="card-container">            
@@ -75,12 +113,31 @@ const WheelDisplay = () => {
                 />
                 <h2 className="card-title"></h2>
                 <p className="card-summary"></p>
-                <p className="card-publisher">Published by:</p>
+                <p>Elbow Movement | Wrist Rotation | Shoulder Rotation</p>
                 <div className='speedDisplay'>
                     <CircularProgressbar
-                    
+                        percentage={elbowSpeed_percentage}
+                        circleWidth='150'
+                    />
+                    <CircularProgressbar
+                        percentage={wristRotation_percentage}
+                        circleWidth='150'
+                    />
+                    <CircularProgressbar
+                        percentage={shoulderRotation_percentage}
+                        circleWidth='150'
                     />
                 </div>
+                <h3>Arm Speed</h3>
+                <input
+                    type='range'
+                    min='0'
+                    max='100'
+                    step='1'
+                    value={percentage2}
+                    className='rightWheelsInput'
+                    onChange={(ev) => setPercentage2(ev.target.value)}
+                />
             </div>
             <div className="card"> {/* For outputting controls */}
                 <div className="terminal-holder">
